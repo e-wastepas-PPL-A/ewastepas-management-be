@@ -33,6 +33,7 @@ class OtpMail extends Mailable
             'otp' => $this->otp,
         ]);
     }
+    
 
     /**
      * Get the message envelope.

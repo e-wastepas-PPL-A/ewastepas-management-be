@@ -3,10 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Mail\OtpMail;
+use Illuminate\Support\Carbon;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -58,5 +61,17 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function generateOtp()
+    {
+
+        $otp = random_int(100000, 999999);
+        $this->otp_code = $otp;
+        $this->otp_expiry = Carbon::now()->addMinutes(10);
+        $this->save();
+        // Kirim OTP ke email (gunakan mailable yang sudah ada jika ada)
+        Mail::to($this->email)->send(new OtpMail($this->name, $otp));
+        //Mail::to($this->email)->send(new OtpMail($this->otp_code, $this->email));
     }
 }

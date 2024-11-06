@@ -45,50 +45,49 @@ class LoginController extends Controller
 
     // Callback dari Google
     public function handleGoogleCallback()
-{
-    try {
-        // Mengambil data pengguna dari Google
-        $googleUser = Socialite::driver('google')->stateless()->user();
-        // Sinkronisasi data pengguna Google ke dalam model User
-        $user = User::updateOrCreate(
-            [
-                'email' => $googleUser->getEmail(),
-            ],
-            [
-                'name' => $googleUser->getName(),
-                'password' => bcrypt(Str::random(24)), // Menggunakan password acak untuk keamanan
-                'google_id' => $googleUser->getId(),
-                'is_verified' => true, // Otomatis dianggap terverifikasi jika login dari Google
-                'is_admin' => false, // Nilai default
-                'date_of_birth' => null, // Isi nilai default jika tidak ada
-                'address' => null,
-                'phone' => null,
-                'photo' => $googleUser->getAvatar(), // Menyimpan URL avatar dari Google
-            ]
-        );
+    {
+        try {
+            // Mengambil data pengguna dari Google
+            $googleUser = Socialite::driver('google')->stateless()->user();
+            // Sinkronisasi data pengguna Google ke dalam model User
+            $user = User::updateOrCreate(
+                [
+                    'email' => $googleUser->getEmail(),
+                ],
+                [
+                    'name' => $googleUser->getName(),
+                    'password' => bcrypt(Str::random(24)), // Menggunakan password acak untuk keamanan
+                    'google_id' => $googleUser->getId(),
+                    'is_verified' => true, // Otomatis dianggap terverifikasi jika login dari Google
+                    'is_admin' => false, // Nilai default
+                    'date_of_birth' => null, // Isi nilai default jika tidak ada
+                    'address' => null,
+                    'phone' => null,
+                    'photo' => $googleUser->getAvatar(), // Menyimpan URL avatar dari Google
+                ]
+            );
 
-        // Buat token untuk autentikasi API
-        $token = $user->createToken('GoogleLoginToken')->plainTextToken;
+            // Buat token untuk autentikasi API
+            $token = $user->createToken('GoogleLoginToken')->plainTextToken;
 
-        // Mengembalikan respons JSON dengan token dan data pengguna
-        return response()->json([
-            'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'is_verified' => $user->is_verified,
-                'is_admin' => $user->is_admin,
-                'date_of_birth' => $user->date_of_birth,
-                'address' => $user->address,
-                'phone' => $user->phone,
-                'photo' => $user->photo,
-            ]
-        ], 200);
+            // Mengembalikan respons JSON dengan token dan data pengguna
+            return response()->json([
+                'token' => $token,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_verified' => $user->is_verified,
+                    'is_admin' => $user->is_admin,
+                    'date_of_birth' => $user->date_of_birth,
+                    'address' => $user->address,
+                    'phone' => $user->phone,
+                    'photo' => $user->photo,
+                ]
+            ], 200);
 
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Unable to login with Google.'], 500);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Unable to login with Google.'], 500);
+        }
     }
-}
-
 }
