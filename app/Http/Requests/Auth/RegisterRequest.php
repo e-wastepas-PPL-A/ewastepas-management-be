@@ -23,11 +23,11 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:50',
-            'email' => 'required|email|max:50|unique:users,email',
+            'email' => 'required|email|max:50|unique:management,email',
             'password' => 'required|string|max:255',
             'date_of_birth' => 'nullable|date',
             'address' => 'nullable|string|max:50',
-            'phone' => 'nullable|string|max:15|unique:users,phone',
+            'phone' => 'nullable|string|max:15|unique:management,phone',
             'photo' => 'nullable|string|max:255',
             'is_verified' => 'nullable|boolean',
             'is_admin' => 'nullable|boolean',

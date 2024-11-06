@@ -15,7 +15,7 @@ class ForgotPasswordController extends Controller
     {
         // Validasi input email
         $request->validate([
-            'email' => 'required|email|exists:users,email'
+            'email' => 'required|email|exists:management,email'
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -29,7 +29,7 @@ class ForgotPasswordController extends Controller
     public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required|email|exists:management,email',
             'otp_code' => 'required|string',
             'password' => 'required|string|confirmed',
         ]);

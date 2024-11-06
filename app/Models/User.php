@@ -22,7 +22,7 @@ class User extends Authenticatable
      * @var array<int, string>
      * 
      */
-    protected $table = 'users';
+    protected $table = 'management';
     protected $primaryKey = 'management_id';
     protected $fillable = [
         'management_id',

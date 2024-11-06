@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('management', function (Blueprint $table) {
             $table->id('management_id');
             $table->string('name', 50);
             $table->string('email', 50)->unique();
@@ -27,6 +27,8 @@ return new class extends Migration
             $table->string('google_id')->nullable();
             $table->timestamps();
         });
+
+        // Schema::rename('users', 'management');
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

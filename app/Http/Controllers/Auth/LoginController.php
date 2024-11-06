@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 
 class LoginController extends Controller
 {
@@ -31,10 +32,15 @@ class LoginController extends Controller
         return response()->json(['error' => 'Unauthorized'], 401);
     }
 
-    public function logout(): JsonResponse
+    public function logout(Request $request)
     {
-        auth()->user()->tokens()->delete();
-        return response()->json(['message' => 'Logged out successfully'], 200);
+        try {
+            $request->user()->currentAccessToken()->delete();
+            return response()->json(['message' => 'Successfully logged out.']);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => 'Unable to logout.'], 500);
+        }
+        
     }
 
     // Redirect ke Google
