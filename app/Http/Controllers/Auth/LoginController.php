@@ -13,34 +13,44 @@ use Illuminate\Http\Request;
 
 class LoginController extends Controller
 {
-    public function login(LoginRequest $request):JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
         $credentials = $request->only('email', 'password');
     
         if (auth()->attempt($credentials)) {
-            $user = Auth::user(); // Ensure the user is authenticated
+            $user = Auth::user();
     
-            if ($user) {
-                $success['token'] = $user->createToken($request->userAgent())->plainTextToken;
-                $success['name'] = $user->name;
-                $success['email'] = $user->email;
-                $success['success'] = true;
-    
-                return response()->json($success, 200);
+            // Cek apakah pengguna telah diverifikasi
+            if (!$user->is_verified) {
+                auth()->logout();
+                return response()->json(['error' => 'Please verify your email.'], 401);
             }
+
+            // Buat token jika pengguna diverifikasi
+            $success['token'] = $user->createToken($request->userAgent())->plainTextToken;
+            $success['name'] = $user->name;
+            $success['email'] = $user->email;
+            $success['success'] = true;
+
+            return response()->json($success, 200);
         }
         return response()->json(['error' => 'Unauthorized'], 401);
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         try {
-            $request->user()->currentAccessToken()->delete();
-            return response()->json(['message' => 'Successfully logged out.']);
+            // Pastikan pengguna memiliki token aktif sebelum logout
+            if ($request->user() && $request->user()->currentAccessToken()) {
+                $request->user()->currentAccessToken()->delete();
+                return response()->json(['message' => 'Successfully logged out.'], 200);
+            }
+
+            // Jika tidak ada token, return dengan pesan
+            return response()->json(['error' => 'No active session found.'], 400);
         } catch (\Throwable $th) {
             return response()->json(['error' => 'Unable to logout.'], 500);
         }
-        
     }
 
     // Redirect ke Google

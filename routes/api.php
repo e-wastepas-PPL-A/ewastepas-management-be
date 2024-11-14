@@ -20,7 +20,9 @@ Route::get('/auth/google/callback', [LoginController::class, 'handleGoogleCallba
 
 Route::middleware(['auth:sanctum', 'is_verified'])->group(function () {
     Route::post('logout', [LoginController::class, 'logout']);
-    Route::get('show', [ProfileController::class, 'index']);
-    Route::put('profile', [ProfileController::class, 'update']);
+    Route::get('profile', [ProfileController::class, 'index']);
+    Route::put('profile-update', [ProfileController::class, 'update']);
 });
+
+
 

@@ -3,8 +3,9 @@
 namespace App\Http\Middleware;
 
 use Closure;
+
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\JsonResponse;
 
 class EnsureUserIsVerified
 {
@@ -13,7 +14,7 @@ class EnsureUserIsVerified
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next): JsonResponse
     {
         if (auth()->check() && !auth()->user()->is_verified) {
             return response()->json(['error' => 'Your account is not verified.'], 403);
