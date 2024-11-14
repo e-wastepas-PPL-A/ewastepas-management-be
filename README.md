@@ -14,9 +14,10 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 # E-Wastepas Modul Manajemen - Web Application
 
 ## Features
-- **Authentication** using Laravel Breeze
+- **Authentication**
 - **OTP Email Verification** on registration
 - **Forgot Password**
+- **Profile**
 
 ## Requirements
 - PHP >= 8.1
