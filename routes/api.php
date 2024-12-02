@@ -4,9 +4,9 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\VerifyOtpController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WasteTypeController;
 
 // Rute untuk mendaftar (register) dan login, di luar auth middleware
 Route::post('register', [RegisterController::class, 'register']);
@@ -22,6 +22,7 @@ Route::middleware(['auth:sanctum', 'is_verified'])->group(function () {
     Route::post('logout', [LoginController::class, 'logout']);
     Route::get('profile', [ProfileController::class, 'index']);
     Route::put('profile-update', [ProfileController::class, 'update']);
+    Route::get('waste-types', [WasteTypeController::class, 'index']);
 });
 
 

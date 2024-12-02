@@ -25,7 +25,6 @@ class User extends Authenticatable
     protected $table = 'management';
     protected $primaryKey = 'management_id';
     protected $fillable = [
-        'management_id',
         'name',
         'email',
         'password',
@@ -70,8 +69,7 @@ class User extends Authenticatable
         $this->otp_code = $otp;
         $this->otp_expiry = Carbon::now()->addMinutes(10);
         $this->save();
-        // Kirim OTP ke email (gunakan mailable yang sudah ada jika ada)
+        // Kirim OTP ke email
         Mail::to($this->email)->send(new OtpMail($this->name, $otp));
-        //Mail::to($this->email)->send(new OtpMail($this->otp_code, $this->email));
     }
 }

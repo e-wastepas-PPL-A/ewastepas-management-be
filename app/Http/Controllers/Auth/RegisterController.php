@@ -13,16 +13,28 @@ class RegisterController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         try {
-            $newuser = $request->validated();
-            $newuser['password'] = Hash::make($newuser['password']);
-            $user = User::create($newuser);
+            // Validasi input
+            $newUserData = $request->validated();
+            $newUserData['password'] = Hash::make($newUserData['password']);
 
-            // Send OTP email
-            $user->generateOtp();
+            // Buat pengguna baru
+            $management = User::create($newUserData);
 
-            return response()->json(['message' => 'Registration successful! Please verify your email with the OTP sent to your email.','email' => $user->email], 201);
+            // Kirim OTP melalui email
+            $management->generateOtp();
+
+            // Response yang sesuai dengan frontend
+            return response()->json([
+                'message' => 'Registrasi berhasil! Silakan verifikasi email Anda dengan OTP yang dikirim.',
+                'email' => $management->email
+            ], 201);
+
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Registration failed!','error' => $e->getMessage()], 500);
+            // Kembalikan pesan error yang lebih sederhana untuk frontend
+            return response()->json([
+                'message' => 'Registrasi gagal! Coba lagi atau hubungi dukungan.',
+                'error' => $e->getMessage() // Tambahkan ini jika butuh detail untuk debug
+            ], 500);
         }
     }
 }

@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        //Schema::rename('users', 'management');
         Schema::create('management', function (Blueprint $table) {
             $table->id('management_id');
             $table->string('name', 50);
@@ -28,7 +29,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Schema::rename('users', 'management');
+        //Schema::rename('users', 'management');
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
@@ -51,7 +52,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        //Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }

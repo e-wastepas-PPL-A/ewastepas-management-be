@@ -53,8 +53,8 @@ class ProfileController extends Controller
             // Validasi input yang dikirim
             $validated = $request->validate([
                 'name' => 'nullable|string|max:255',
-                'email' => 'required|email|max:255|unique:management,email,' . $user->management_id . ',management_id', // tetapkan primary key sebagai management_id
-                'date_of_birth' => 'required|date',
+                'email' => 'nullable|email|max:255|unique:management,email,' . $user->management_id . ',management_id', // tetapkan primary key sebagai management_id
+                'date_of_birth' => 'nullable|date',
                 'address' => 'nullable|string|max:255',
                 'phone' => 'nullable|string|max:15',
                 'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',

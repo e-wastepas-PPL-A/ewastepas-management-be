@@ -15,27 +15,39 @@ class LoginController extends Controller
 {
     public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->only('email', 'password');
-    
-        if (auth()->attempt($credentials)) {
-            $user = Auth::user();
-    
-            // Cek apakah pengguna telah diverifikasi
-            if (!$user->is_verified) {
-                auth()->logout();
-                return response()->json(['error' => 'Please verify your email.'], 401);
-            }
+    // Mendapatkan kredensial dari request
+    $credentials = $request->only('email', 'password');
 
-            // Buat token jika pengguna diverifikasi
-            $success['token'] = $user->createToken($request->userAgent())->plainTextToken;
-            $success['name'] = $user->name;
-            $success['email'] = $user->email;
-            $success['success'] = true;
+    // Cek apakah pengguna sudah memiliki token aktif
+    
 
-            return response()->json($success, 200);
+    // Melakukan percakapan kredensial
+    if (auth()->attempt($credentials)) {
+        $user = Auth::user();
+
+        if ($user->tokens()->exists()) {
+            // Jika pengguna sudah login (sudah ada sesi aktif), kembalikan respons error
+            return response()->json(['error' => 'You are already logged in. Please logout first.'], 400);
         }
-        return response()->json(['error' => 'Unauthorized'], 401);
+
+        // Cek apakah pengguna telah diverifikasi
+        if (!$user->is_verified) {
+            auth()->logout();
+            return response()->json(['error' => 'Please verify your email.'], 401);
+        }
+
+        // Buat token jika pengguna diverifikasi
+        $success['token'] = $user->createToken($request->userAgent())->plainTextToken;
+        $success['name'] = $user->name;
+        $success['email'] = $user->email;
+        $success['success'] = true;
+
+        return response()->json($success, 200);
     }
+
+    return response()->json(['error' => 'Unauthorized'], 401);
+}
+
 
     public function logout(Request $request): JsonResponse
     {
