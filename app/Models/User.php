@@ -10,8 +10,9 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens;
@@ -36,7 +37,6 @@ class User extends Authenticatable
         'is_admin',
         'otp_code',
         'otp_expiry',
-        'google_id',
     ];
 
     /**
@@ -67,9 +67,24 @@ class User extends Authenticatable
 
         $otp = random_int(100000, 999999);
         $this->otp_code = $otp;
-        $this->otp_expiry = Carbon::now()->addMinutes(10);
+        $this->otp_expiry = Carbon::now('Asia/Jakarta')->addMinutes(3)->format('Y-m-d H:i:s');
         $this->save();
         // Kirim OTP ke email
         Mail::to($this->email)->send(new OtpMail($this->name, $otp));
+    }
+
+    public function resendOtp()
+    {
+        $this->generateOtp();
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }

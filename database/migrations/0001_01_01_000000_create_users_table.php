@@ -14,9 +14,9 @@ return new class extends Migration
         //Schema::rename('users', 'management');
         Schema::create('management', function (Blueprint $table) {
             $table->id('management_id');
-            $table->string('name', 50);
+            $table->string('name', 50)->nullable();
             $table->string('email', 50)->unique();
-            $table->string('password', 255);
+            $table->string('password', 255)->hash();
             $table->date('date_of_birth')->nullable();
             $table->string('address', 50)->nullable();
             $table->string('phone', 15)->nullable()->unique();

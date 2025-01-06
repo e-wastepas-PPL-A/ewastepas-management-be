@@ -5,47 +5,73 @@ namespace App\Http\Controllers\auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ForgotPasswordController extends Controller
 {
-    public function sendOtp(Request $request)
+    public function forgotPassword(Request $request)
     {
-        // Validasi input email
         $request->validate([
-            'email' => 'required|email|exists:management,email'
+            'email' => 'required|email',
         ]);
 
         $user = User::where('email', $request->email)->first();
 
-        // Panggil fungsi generateOtp di model User
-        $user->generateOtp();
+        if (!$user) {
+            return response()->json(['message' => 'Email not found'], 404);
+        }
 
-        return response()->json(['message' => 'OTP sent successfully.'], 200);
+        $user->generateOtp();
+        $payload = [
+            'email' => $user->email,
+            'otp_code' => $user->otp_code,
+            'otp_expiry' => now()->addMinutes(10)->timestamp,
+        ];
+    
+        $token = JWTAuth::fromUser($user, $payload);
+        return response()->json([
+            'message' => 'Otp terkirim',
+            'token' => $token,
+        ]);
     }
 
-    public function resetPassword(Request $request): JsonResponse
+    public function changePassword(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:management,email',
-            'otp_code' => 'required|string',
-            'password' => 'required|string|confirmed',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        try {
+            $token = $request->bearerToken();
+            
+            if (!$token) {
+                return response()->json(['error' => 'Token not provided.'], 400);
+            }
 
-        // Periksa apakah OTP cocok dan belum kadaluwarsa
-        if ($user->otp_code === $request->otp_code && $user->otp_expiry > Carbon::now()) {
-            // Hash password baru sebelum menyimpannya
-            $user->password = Hash::make($request->password);
-            $user->otp_code = null;  // Hapus OTP setelah digunakan
-            $user->otp_expiry = null; // Hapus waktu kadaluwarsa OTP
-            $user->save();
+            $user = JWTAuth::parseToken()->authenticate();
 
-            return response()->json(['message' => 'Password has been reset successfully'], 200);
+            if (!$user) {
+                return response()->json(['error' => 'User not found.'], 404);
+            }
+
+            if ($request->password !== $request->password_confirmation) {
+                return response()->json(['error' => 'Password and confirmation do not match.'], 400);
+            }
+
+            $user->update([
+                'password' => bcrypt($request->password),
+            ]);
+
+            return response()->json(['message' => 'Password updated successfully.'], 200);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            return response()->json(['error' => 'Token has expired.'], 400);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return response()->json(['error' => 'Invalid token.'], 400);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return response()->json(['error' => 'Token is required.'], 400);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Internal Server Error', 'message' => $e->getMessage()], 500);
         }
-        return response()->json(['message' => 'Invalid OTP or OTP expired'], 400);
     }
 }

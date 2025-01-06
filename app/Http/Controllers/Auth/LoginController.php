@@ -10,62 +10,71 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Helpers\ResponseJson;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class LoginController extends Controller
 {
     public function login(LoginRequest $request): JsonResponse
     {
-    // Mendapatkan kredensial dari request
-    $credentials = $request->only('email', 'password');
+        // Mendapatkan kredensial dari request
+        $credentials = $request->only('email', 'password');
 
-    // Cek apakah pengguna sudah memiliki token aktif
-    
-
-    // Melakukan percakapan kredensial
-    if (auth()->attempt($credentials)) {
-        $user = Auth::user();
-
-        if ($user->tokens()->exists()) {
-            // Jika pengguna sudah login (sudah ada sesi aktif), kembalikan respons error
-            return response()->json(['error' => 'You are already logged in. Please logout first.'], 400);
-        }
-
-        // Cek apakah pengguna telah diverifikasi
-        if (!$user->is_verified) {
-            auth()->logout();
-            return response()->json(['error' => 'Please verify your email.'], 401);
-        }
-
-        // Buat token jika pengguna diverifikasi
-        $success['token'] = $user->createToken($request->userAgent())->plainTextToken;
-        $success['name'] = $user->name;
-        $success['email'] = $user->email;
-        $success['success'] = true;
-
-        return response()->json($success, 200);
-    }
-
-    return response()->json(['error' => 'Unauthorized'], 401);
-}
-
-
-    public function logout(Request $request): JsonResponse
-    {
         try {
-            // Pastikan pengguna memiliki token aktif sebelum logout
-            if ($request->user() && $request->user()->currentAccessToken()) {
-                $request->user()->currentAccessToken()->delete();
-                return response()->json(['message' => 'Successfully logged out.'], 200);
+            // Mencoba untuk membuat token
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return response()->json(['error' => 'Invalid email or password.'], 401);
             }
 
-            // Jika tidak ada token, return dengan pesan
-            return response()->json(['error' => 'No active session found.'], 400);
+            $user = Auth::user();
+
+            // Cek apakah pengguna sudah diverifikasi
+            if (!$user->is_verified) {
+                // Logout pengguna jika belum diverifikasi
+                JWTAuth::invalidate($token);
+                return response()->json([
+                    'error' => 'Please verify your email address before logging in.',
+                    'resend_verification' => true,
+                ], 401);
+            }
+
+            // Siapkan data respons
+            $success = [
+                'token' => $token,
+                'name' => $user->name,
+                'email' => $user->email,
+                'photo' => $user->photo ? asset('storage/' . $user->photo) : null,
+                'success' => true,
+            ];
+
+            return response()->json($success, 200);
+        } catch (JWTException $e) {
+            // Respons jika terjadi kesalahan saat membuat token
+            return response()->json(['error' => 'Could not create token.'], 500);
+        }
+    }
+    
+    public function logout(Request $request): JsonResponse
+    {
+    try {
+        // Ambil token dari header Authorization
+        $token = $request->bearerToken();
+        if (!$token) {
+            return Response()->json(['message' => 'Eror'], 400);// Token tidak ditemukan
+        }
+
+        // Menghapus token yang ada
+        $request->user()->currentAccessToken()->delete();
+
+            return response()->json(['message' => 'Successfully logged out.'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['error' => 'Unable to logout.'], 500);
+            return response()->json(['error' => 'Unable to logout.'], 500); // Menangani error lainnya
         }
     }
 
-    // Redirect ke Google
+
+
     public function redirectToGoogle()
     {
         return Socialite::driver('google')->stateless()->redirect();
@@ -87,11 +96,11 @@ class LoginController extends Controller
                     'password' => bcrypt(Str::random(24)), // Menggunakan password acak untuk keamanan
                     'google_id' => $googleUser->getId(),
                     'is_verified' => true, // Otomatis dianggap terverifikasi jika login dari Google
-                    'is_admin' => false, // Nilai default
-                    'date_of_birth' => null, // Isi nilai default jika tidak ada
+                    'is_admin' => false,
+                    'date_of_birth' => null,
                     'address' => null,
                     'phone' => null,
-                    'photo' => $googleUser->getAvatar(), // Menyimpan URL avatar dari Google
+                    'photo' => $googleUser->getAvatar(),
                 ]
             );
 
@@ -99,20 +108,7 @@ class LoginController extends Controller
             $token = $user->createToken('GoogleLoginToken')->plainTextToken;
 
             // Mengembalikan respons JSON dengan token dan data pengguna
-            return response()->json([
-                'token' => $token,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'is_verified' => $user->is_verified,
-                    'is_admin' => $user->is_admin,
-                    'date_of_birth' => $user->date_of_birth,
-                    'address' => $user->address,
-                    'phone' => $user->phone,
-                    'photo' => $user->photo,
-                ]
-            ], 200);
+            return redirect(env('FRONTEND_URL'));
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Unable to login with Google.'], 500);
