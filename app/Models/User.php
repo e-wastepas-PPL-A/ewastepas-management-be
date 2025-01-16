@@ -3,24 +3,40 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Mail\OtpMail;
+use Illuminate\Support\Carbon;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
+     * 
      */
+    protected $table = 'management';
+    protected $primaryKey = 'management_id';
     protected $fillable = [
         'name',
         'email',
         'password',
+        'date_of_birth',
+        'address',
+        'phone',
+        'photo',
+        'is_verified',
+        'is_admin',
+        'otp_code',
+        'otp_expiry',
     ];
 
     /**
@@ -44,5 +60,31 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function generateOtp()
+    {
+
+        $otp = random_int(100000, 999999);
+        $this->otp_code = $otp;
+        $this->otp_expiry = Carbon::now('Asia/Jakarta')->addMinutes(3)->format('Y-m-d H:i:s');
+        $this->save();
+        // Kirim OTP ke email
+        Mail::to($this->email)->send(new OtpMail($this->name, $otp));
+    }
+
+    public function resendOtp()
+    {
+        $this->generateOtp();
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }
