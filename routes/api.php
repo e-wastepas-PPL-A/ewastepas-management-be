@@ -24,6 +24,7 @@ Route::middleware(['auth:api', 'is_verified'])->group(function () {
     Route::get('profile', [ProfileController::class, 'index']);
     Route::post('profile-update', [ProfileController::class, 'update']);
     Route::get('categories', [WasteTypeController::class, 'index']);
+    Route::get('categories/{wasteTypeId}/wastes', [WasteTypeController::class, 'show']);
 });
 
 

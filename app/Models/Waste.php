@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Waste extends Model
 {
     use HasFactory;
+    protected $table = 'waste';
+    protected $primaryKey = 'waste_id';
     protected $fillable = [
         'waste_name',
         'point',

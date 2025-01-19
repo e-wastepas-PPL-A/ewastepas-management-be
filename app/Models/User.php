@@ -67,10 +67,22 @@ class User extends Authenticatable implements JWTSubject
 
         $otp = random_int(100000, 999999);
         $this->otp_code = $otp;
-        $this->otp_expiry = Carbon::now('Asia/Jakarta')->addMinutes(3)->format('Y-m-d H:i:s');
+        $this->otp_expiry = Carbon::now('Asia/Jakarta')->addMinutes(2)->format('Y-m-d H:i:s');
         $this->save();
-        // Kirim OTP ke email
         Mail::to($this->email)->send(new OtpMail($this->name, $otp));
+    }
+
+    public function isOtpValid(string $otpCode): bool
+    {
+        if ($this->otp_expiry < Carbon::now() || $this->otp_code !== $otpCode) {
+            $this->update([
+                'otp_code' => null,
+                'otp_expiry' => null,
+            ]);
+            return false;
+        }
+
+        return true;
     }
 
     public function resendOtp()
