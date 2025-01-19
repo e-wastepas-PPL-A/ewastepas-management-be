@@ -1,0 +1,24 @@
+version: "3.7"
+
+services:
+  app:
+    build:
+      args:
+        user: ewastepas
+        uid: 10021
+      context: ./
+      dockerfile: Dockerfile
+    image: ewastepas-management-api
+    container_name: ewastepas-management-api
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - ewastepas-bridge
+    ports:
+      - 8041:8000
+
+networks:
+  ewastepas-bridge:
+    external: true

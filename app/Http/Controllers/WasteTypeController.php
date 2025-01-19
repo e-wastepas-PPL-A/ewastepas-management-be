@@ -45,9 +45,28 @@ class WasteTypeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(WasteType $wasteType)
+    public function show($wasteTypeId): JsonResponse
     {
-        //
+         // Cari kategori sampah berdasarkan ID
+         $management = Auth::user();
+
+        if (!$management) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        
+         $wasteType = WasteType::find($wasteTypeId);
+
+         if (!$wasteType) {
+             return response()->json(['message' => 'Kategori sampah tidak ditemukan'], 404);
+         }
+ 
+         // Ambil jenis sampah yang terkait dengan kategori
+         $wastes = $wasteType->wastes;
+ 
+         return response()->json([
+             'waste_type' => $wasteType,
+             'wastes' => $wastes,
+         ], 200);
     }
 
     /**

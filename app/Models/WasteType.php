@@ -9,7 +9,7 @@ class WasteType extends Model
 {
     use HasFactory;
     protected $table = 'waste_type';
-
+    protected $primaryKey = 'waste_type_id';
     protected $fillable = [
         'waste_type_name',
         'image',
